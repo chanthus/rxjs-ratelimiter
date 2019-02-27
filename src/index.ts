@@ -8,6 +8,7 @@ export default class RateLimiter {
   constructor(
     private requestsPerInterval: number,
     private intervalLength: number,
+    private delayBetweenCallsMs: number = 0,
     private scheduler: SchedulerLike = asyncScheduler,
   ) {}
 
@@ -25,7 +26,9 @@ export default class RateLimiter {
             this.intervalEnds += this.intervalLength
           }
 
-          const wait = this.intervalEnds - this.intervalLength - now
+          const delayBetweenCallsMs = this.delayBetweenCallsMs * this._clampedInterval()
+          const wait = this.intervalEnds - this.intervalLength - now + delayBetweenCallsMs
+
           return wait > 0
             ? of(null).pipe(
                 delay(wait, this.scheduler),
@@ -35,5 +38,8 @@ export default class RateLimiter {
         }
       }),
     )
+  }
+  _clampedInterval(): number {
+    return Math.max(this.nActiveInCurrentInterval - 1, 0)
   }
 }

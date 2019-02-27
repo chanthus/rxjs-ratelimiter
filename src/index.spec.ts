@@ -19,7 +19,7 @@ describe('rxjs-ratelimiter', () => {
   })
 
   it('queues subscriptions according to rate limit of 1 request per 10 ticks', () => {
-    const limiter = new RateLimiter(1, 10, scheduler)
+    const limiter = new RateLimiter(1, 10, 0, scheduler)
     const limitObservable = value => limiter.limit(of(value))
 
     expect(limitObservable('a')).toBe('(a|)')
@@ -29,19 +29,19 @@ describe('rxjs-ratelimiter', () => {
   })
 
   it('queues subscriptions according to rate limit of 2 requests per 10 ticks', () => {
-    const limiter = new RateLimiter(2, 10, scheduler)
+    const limiter = new RateLimiter(2, 10, 10, scheduler)
     const limitObservable = value => limiter.limit(of(value))
 
     expect(limitObservable('a')).toBe('(a|)')
-    expect(limitObservable('b')).toBe('(b|)')
+    expect(limitObservable('b')).toBe('-(b|)')
     expect(limitObservable('c')).toBe('-(c|)')
-    expect(limitObservable('d')).toBe('-(d|)')
+    expect(limitObservable('d')).toBe('--(d|)')
     expect(limitObservable('e')).toBe('--(e|)')
     flush()
   })
 
   it('queues subsequent subscriptions according to rate limit of 2 requests per 10 ticks', () => {
-    const limiter = new RateLimiter(2, 10, scheduler)
+    const limiter = new RateLimiter(2, 10, 0, scheduler)
     const limitObservable = value => limiter.limit(of(value))
 
     expect(limitObservable('a')).toBe('(a|)')
@@ -60,7 +60,7 @@ describe('rxjs-ratelimiter', () => {
   })
 
   it('queues retry after original according to rate limit', () => {
-    const limiter = new RateLimiter(1, 20, scheduler)
+    const limiter = new RateLimiter(1, 20, 0, scheduler)
     let iteration = 0
 
     expect(
